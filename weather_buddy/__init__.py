@@ -1,7 +1,8 @@
 import os
 
-from flask import Flask
+from flask import Flask, jsonify
 
+from weather_buddy.database import MongoConnector
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -26,5 +27,16 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    @app.route('/users')
+    def get_all_users():
+        users = MongoConnector().get_collection('users')
+        for user in users.find():
+            user['_id'] = str(user['_id'])
+        return jsonify([{
+            'id': str(user['_id']),
+            'zip': user['zip'],
+            'name': user['name']
+        } for user in users.find()])
 
     return app
